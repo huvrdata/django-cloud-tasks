@@ -1,6 +1,8 @@
 ============================
 Django Cloud Tasks
 ============================
+* Forked from https://github.com/GeorgeLubaretsi/django-cloud-tasks
+
 Integrate `Google Cloud Tasks <https://goo.gl/Ya0AZd>`_ with Django.
 
 Package provides easy to use decorator to create task handlers.
@@ -33,7 +35,7 @@ Installation
 
     .. code-block:: sh
 
-        pip install -e git+git@github.com:GeorgeLubaretsi/django-cloud-tasks.git#egg=django_cloud_tasks
+        pip install -e git+git@github.com:rgutierrez-cotech/django-cloud-tasks.git#egg=django_cloud_tasks
 
 
 (2) Add ``django_cloud_tasks`` to ``INSTALLED_APPS``:
