@@ -28,12 +28,14 @@ if sys.argv[-1] == 'tag':
 readme = open('README.rst').read()
 
 setup(
-    name='django-cloud-tasks',
+    name='django-cloud-tasks-withcredentials',
     version=version,
-    description="""Google Cloud Tasks integration for Django""",
+    description="""Google Cloud Tasks integration for Django. Forked from https://github.com/GeorgeLubaretsi/django-cloud-tasks""",
     long_description=readme,
-    author='GeorgeLubaretsi',
-    url='https://github.com/GeorgeLubaretsi/django-cloud-tasks',
+    author='rgutierrez-cotech',
+    author_email='gutierrez@carnegiehub.org',
+    url='https://github.com/rgutierrez-cotech/django-cloud-tasks',
+    download_url='https://github.com/rgutierrez-cotech/django-cloud-tasks/archive/0.0.4a.tar.gz',
     packages=[
         'django_cloud_tasks',
     ],
