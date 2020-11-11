@@ -6,13 +6,12 @@ import logging
 import time
 import uuid
 
-from google.cloud import tasks_v2
-
 from django.test import RequestFactory
 
 from .apps import DCTConfig
 from .connection import connection
-from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME, HANDLER_SECRET_HEADER_NAME
+from .constants import (DJANGO_HANDLER_SECRET_HEADER_NAME,
+                        HANDLER_SECRET_HEADER_NAME)
 
 logger = logging.getLogger(__name__)
 
@@ -171,12 +170,12 @@ class EmulatedTask(object):
         self.setup()
 
     def setup(self):
-        payload = self.body["task"]["appEngineHttpRequest"]["body"]
+        payload = self.body["http_request"]["body"]
         decoded = json.loads(base64.b64decode(payload))
-        self.body["task"]["appEngineHttpRequest"]["body"] = decoded
+        self.body["http_request"]["body"] = decoded
 
     def get_json_body(self):
-        body = self.body["task"]["appEngineHttpRequest"]["body"]
+        body = self.body["http_request"]["body"]
         return json.dumps(body)
 
     @property
@@ -328,7 +327,6 @@ class CloudTaskWrapper(object):
         """
         TASK_URL = "/api/tasks/task-handler/"
 
-        client = tasks_v2.CloudTasksClient()
         project = DCTConfig.GS_PROJECT_ID
         location = "us-central1"
         if url is None:

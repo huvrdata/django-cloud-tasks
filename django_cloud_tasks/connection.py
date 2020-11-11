@@ -2,37 +2,9 @@ import hashlib
 import os.path
 import tempfile
 
-import googleapiclient.discovery
+from google.cloud import tasks_v2
 
 from .apps import DCTConfig
-
-
-class DiscoveryCache:
-    """
-    Unix file-based cache for use with the API Discovery service
-
-    See https://github.com/googleapis/google-api-python-client/issues/325#issuecomment-419387788
-    """
-
-    def filename(self, url):
-        return os.path.join(
-            tempfile.gettempdir(),
-            "google_api_discovery_" + hashlib.md5(url.encode()).hexdigest(),
-        )
-
-    def get(self, url):
-        try:
-            with open(self.filename(url), "rb") as f:
-                return f.read().decode()
-        except FileNotFoundError:
-            return None
-
-    def set(self, url, content):
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            f.write(content.encode())
-            f.flush()
-            os.fsync(f)
-        os.rename(f.name, self.filename(url))
 
 
 class cached_property(object):
@@ -51,11 +23,8 @@ class cached_property(object):
 class GoogleCloudClient(object):
     @cached_property
     def client(self):
-        client = googleapiclient.discovery.build(
-            "cloudtasks",
-            "v2",
+        client = tasks_v2.CloudTasksClient(
             credentials=DCTConfig.DJANGO_CLOUD_TASKS_CREDENTIALS,
-            cache=DiscoveryCache(),
         )
         return client
 
