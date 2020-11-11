@@ -1,7 +1,8 @@
-import googleapiclient.discovery
-import os.path
 import hashlib
+import os.path
 import tempfile
+
+import googleapiclient.discovery
 
 from .apps import DCTConfig
 
@@ -12,14 +13,16 @@ class DiscoveryCache:
 
     See https://github.com/googleapis/google-api-python-client/issues/325#issuecomment-419387788
     """
+
     def filename(self, url):
         return os.path.join(
             tempfile.gettempdir(),
-            'google_api_discovery_' + hashlib.md5(url.encode()).hexdigest())
+            "google_api_discovery_" + hashlib.md5(url.encode()).hexdigest(),
+        )
 
     def get(self, url):
         try:
-            with open(self.filename(url), 'rb') as f:
+            with open(self.filename(url), "rb") as f:
                 return f.read().decode()
         except FileNotFoundError:
             return None
@@ -48,9 +51,12 @@ class cached_property(object):
 class GoogleCloudClient(object):
     @cached_property
     def client(self):
-        client = googleapiclient.discovery.build('cloudtasks', 'v2beta3',
-                credentials=DCTConfig.google_cloud_credentials(), 
-                cache=DiscoveryCache())
+        client = googleapiclient.discovery.build(
+            "cloudtasks",
+            "v2beta3",
+            credentials=DCTConfig.google_cloud_credentials(),
+            cache=DiscoveryCache(),
+        )
         return client
 
     @cached_property
