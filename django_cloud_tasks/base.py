@@ -316,7 +316,7 @@ class CloudTaskWrapper(object):
         # registered_task_runners = registered(factory=factory)
 
         # task_runner = factory.load(task_type)
-        client = tasks_v2.CloudTasksClient()
+        client = connection.client
         # TODO: lookup from django settings
         project = GS_PROJECT_ID
         location = "us-central1"
@@ -328,7 +328,7 @@ class CloudTaskWrapper(object):
         parent = client.queue_path(project, location, queue)
         task_name = None
         # Construct the request body.
-        task_body = {
+        task_base = {
             "http_request": {  # Specify the type of request.
                 "http_method": tasks_v2.HttpMethod.POST,
                 "url": url,  # The full url path that the task will be sent to.
@@ -341,7 +341,7 @@ class CloudTaskWrapper(object):
                 # Convert dict to JSON string
                 payload = json.dumps(payload)
                 # specify http content-type to application/json
-                task_body["http_request"]["headers"] = {
+                task_base["http_request"]["headers"] = {
                     "Content-type": "application/json"
                 }
 
@@ -349,7 +349,7 @@ class CloudTaskWrapper(object):
             task_payload = payload.encode()
 
             # Add the payload to the request.
-            task_body["http_request"]["body"] = task_payload
+            task_base["http_request"]["body"] = task_payload
 
         if in_seconds is not None:
             # Convert "seconds from now" into an rfc3339 datetime string.
@@ -360,14 +360,14 @@ class CloudTaskWrapper(object):
             timestamp.FromDatetime(d)
 
             # Add the timestamp to the tasks.
-            task_body["schedule_time"] = timestamp
+            task_base["schedule_time"] = timestamp
 
         if task_name is not None:
             # Add the name to tasks.
-            task_body["name"] = task_name
+            task_base["name"] = task_name
 
         # Use the client to build and send the task.
-        task = client.create_task(request={"parent": parent, "task": task_body})
+        task = client.create_task(request={"parent": parent, "task": task_base})
 
         logging.info("Created task {}".format(task.name))
         return task
