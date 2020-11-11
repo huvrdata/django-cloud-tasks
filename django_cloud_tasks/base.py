@@ -10,8 +10,7 @@ from django.test import RequestFactory
 
 from .apps import DCTConfig
 from .connection import connection
-from .constants import (DJANGO_HANDLER_SECRET_HEADER_NAME,
-                        HANDLER_SECRET_HEADER_NAME)
+from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME, HANDLER_SECRET_HEADER_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +315,7 @@ class CloudTaskWrapper(object):
             "task": {
                 "http_request": {  # Specify the type of request.
                     "http_method": tasks_v2.HttpMethod.POST,
-                    "url": url,  # The full url path that the task will be sent to.
+                    "url": self._task_handler_url,  # The full url path that the task will be sent to.
                     "oidc_token": {"service_account_email": service_account_email},
                 }
             }
@@ -354,22 +353,17 @@ class CloudTaskWrapper(object):
 
         return body
 
-    def create_cloud_task(self, workspace, url=None, queue="default"):
+    def create_cloud_task(self, queue="default"):
         """
         get request payload and create the task using task_v2
 
         workspace: workspace string
-        url: string of the project url
         queue: name of the cloud tasks queue
 
         returns `Task` object instance
         """
-
-        TASK_URL = "/api/_tasks/"
         project = DCTConfig.GS_PROJECT_ID
         location = "us-central1"
-        if url is None:
-            url = url_setter(TASK_URL, subdomain=workspace.subdomain)
 
         # create the payload of the request
         body = self.get_body()
@@ -379,7 +373,7 @@ class CloudTaskWrapper(object):
         # Use the client to build and send the task.
         task = client.create_task(request={"parent": parent, "task": body})
 
-        logging.info("Created task {}".format(response.name))    
+        logging.info("Created task {}".format(response.name))
         return task
 
 
