@@ -305,31 +305,6 @@ class CloudTaskWrapper(object):
         formatted[HANDLER_SECRET_HEADER_NAME] = self._handler_secret
         return formatted
 
-    # def get_body(self):
-    #     body = {
-    #         'task': {
-    #             'appEngineHttpRequest': {
-    #                 'httpMethod': 'POST',
-    #                 'relativeUri': self._task_handler_url,
-    #                 'headers': self.formatted_headers
-    #             }
-    #         }
-    #     }
-
-    #     payload = {
-    #         'internal_task_name': self._internal_task_name,
-    #         'data': self._data
-    #     }
-    #     payload = json.dumps(payload, cls=ComplexEncoder)
-    #     logger.debug('Creating task with body {0}'.format(payload),
-    #                 extra={'taskBody': payload
-    #                        })
-    #     base64_encoded_payload = base64.b64encode(payload.encode())
-    #     converted_payload = base64_encoded_payload.decode()
-
-    #     body['task']['appEngineHttpRequest']['body'] = converted_payload
-    #     return body
-
     def create_cloud_task(
         self,
         payload,
@@ -339,21 +314,30 @@ class CloudTaskWrapper(object):
         in_seconds=None,
         task_name=None,
     ):
-        TASK_URL = "/api/tasks/task-handler/"
-        # registered_task_runners = registered(factory=factory)
+        """
+        set request payload and create the task using task_v2
 
-        # task_runner = factory.load(task_type)
+        params: payload: Dict Payload
+        workspace: workspace string
+        url: string of the project url
+        queue: name of the cloud tasks queue
+        in_seconds: DateTime object used to schedule the task
+        task_name: string of task name
+
+        returns `Task` object instance
+        """
+        TASK_URL = "/api/tasks/task-handler/"
+
         client = tasks_v2.CloudTasksClient()
-        # TODO: lookup from django settings
-        project = GS_PROJECT_ID
+        project = DCTConfig.GS_PROJECT_ID
         location = "us-central1"
         if url is None:
             url = url_setter(TASK_URL, subdomain=workspace.subdomain)
-        service_account_email = "huvrdata-testing@appspot.gserviceaccount.com"
 
         # Construct the fully qualified queue name.
         parent = client.queue_path(project, location, queue)
         task_name = None
+
         # Construct the request body.
         task_base = {
             "http_request": {  # Specify the type of request.
