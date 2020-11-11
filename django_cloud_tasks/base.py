@@ -378,7 +378,7 @@ class CloudTaskWrapper(object):
         # Use the client to build and send the task.
         task = client.create_task(request={"parent": parent, "task": task_base})
 
-        logging.info("Created task {}".format(response.name))
+        logging.info("Created task {}".format(response.name))    
         return task
 
 
