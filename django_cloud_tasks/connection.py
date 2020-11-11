@@ -54,7 +54,7 @@ class GoogleCloudClient(object):
         client = googleapiclient.discovery.build(
             "cloudtasks",
             "v2",
-            credentials=DCTConfig.DJANGO_CLOUD_TASKS_CREDENTIALS(),
+            credentials=DCTConfig.DJANGO_CLOUD_TASKS_CREDENTIALS,
             cache=DiscoveryCache(),
         )
         return client
