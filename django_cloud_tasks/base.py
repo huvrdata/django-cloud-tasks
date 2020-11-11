@@ -304,44 +304,21 @@ class CloudTaskWrapper(object):
         formatted[HANDLER_SECRET_HEADER_NAME] = self._handler_secret
         return formatted
 
-    def create_cloud_task(
-        self,
-        payload,
-        workspace,
-        url=None,
-        queue="default",
-        in_seconds=None,
-        task_name=None,
-    ):
+    def get_body(self, payload=None, in_seconds=None, task_name=None):
         """
-        set request payload and create the task using task_v2
-
+        Construct the request body
         params: payload: Dict Payload
-        workspace: workspace string
-        url: string of the project url
-        queue: name of the cloud tasks queue
         in_seconds: DateTime object used to schedule the task
         task_name: string of task name
-
-        returns `Task` object instance
         """
-        TASK_URL = "/api/tasks/task-handler/"
 
-        project = DCTConfig.GS_PROJECT_ID
-        location = "us-central1"
-        if url is None:
-            url = url_setter(TASK_URL, subdomain=workspace.subdomain)
-
-        # Construct the fully qualified queue name.
-        parent = client.queue_path(project, location, queue)
-        task_name = None
-
-        # Construct the request body.
-        task_base = {
-            "http_request": {  # Specify the type of request.
-                "http_method": tasks_v2.HttpMethod.POST,
-                "url": url,  # The full url path that the task will be sent to.
-                "oidc_token": {"service_account_email": service_account_email},
+        body = {
+            "task": {
+                "http_request": {  # Specify the type of request.
+                    "http_method": tasks_v2.HttpMethod.POST,
+                    "url": url,  # The full url path that the task will be sent to.
+                    "oidc_token": {"service_account_email": service_account_email},
+                }
             }
         }
 
@@ -350,7 +327,7 @@ class CloudTaskWrapper(object):
                 # Convert dict to JSON string
                 payload = json.dumps(payload)
                 # specify http content-type to application/json
-                task_base["http_request"]["headers"] = {
+                body["task"]["http_request"]["headers"] = {
                     "Content-type": "application/json"
                 }
 
@@ -358,7 +335,7 @@ class CloudTaskWrapper(object):
             task_payload = payload.encode()
 
             # Add the payload to the request.
-            task_base["http_request"]["body"] = task_payload
+            body["task"]["http_request"]["body"] = task_payload
 
         if in_seconds is not None:
             # Convert "seconds from now" into an rfc3339 datetime string.
@@ -369,14 +346,38 @@ class CloudTaskWrapper(object):
             timestamp.FromDatetime(d)
 
             # Add the timestamp to the tasks.
-            task_base["schedule_time"] = timestamp
+            body["task"]["schedule_time"] = timestamp
 
         if task_name is not None:
             # Add the name to tasks.
-            task_base["name"] = task_name
+            body["task"]["name"] = task_name
+
+        return body
+
+    def create_cloud_task(self, workspace, url=None, queue="default"):
+        """
+        get request payload and create the task using task_v2
+
+        workspace: workspace string
+        url: string of the project url
+        queue: name of the cloud tasks queue
+
+        returns `Task` object instance
+        """
+
+        TASK_URL = "/api/_tasks/"
+        project = DCTConfig.GS_PROJECT_ID
+        location = "us-central1"
+        if url is None:
+            url = url_setter(TASK_URL, subdomain=workspace.subdomain)
+
+        # create the payload of the request
+        body = self.get_body()
+        # Construct the fully qualified queue name.
+        parent = client.queue_path(project, location, queue)
 
         # Use the client to build and send the task.
-        task = client.create_task(request={"parent": parent, "task": task_base})
+        task = client.create_task(request={"parent": parent, "task": body})
 
         logging.info("Created task {}".format(response.name))
         return task
