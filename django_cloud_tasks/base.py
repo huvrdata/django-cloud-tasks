@@ -6,6 +6,8 @@ import logging
 import time
 import uuid
 
+from google.cloud import tasks_v2
+
 from django.test import RequestFactory
 
 from .apps import DCTConfig
@@ -303,6 +305,31 @@ class CloudTaskWrapper(object):
         formatted[HANDLER_SECRET_HEADER_NAME] = self._handler_secret
         return formatted
 
+    # def get_body(self):
+    #     body = {
+    #         'task': {
+    #             'appEngineHttpRequest': {
+    #                 'httpMethod': 'POST',
+    #                 'relativeUri': self._task_handler_url,
+    #                 'headers': self.formatted_headers
+    #             }
+    #         }
+    #     }
+
+    #     payload = {
+    #         'internal_task_name': self._internal_task_name,
+    #         'data': self._data
+    #     }
+    #     payload = json.dumps(payload, cls=ComplexEncoder)
+    #     logger.debug('Creating task with body {0}'.format(payload),
+    #                 extra={'taskBody': payload
+    #                        })
+    #     base64_encoded_payload = base64.b64encode(payload.encode())
+    #     converted_payload = base64_encoded_payload.decode()
+
+    #     body['task']['appEngineHttpRequest']['body'] = converted_payload
+    #     return body
+
     def create_cloud_task(
         self,
         payload,
@@ -316,7 +343,7 @@ class CloudTaskWrapper(object):
         # registered_task_runners = registered(factory=factory)
 
         # task_runner = factory.load(task_type)
-        client = connection.client
+        client = tasks_v2.CloudTasksClient()
         # TODO: lookup from django settings
         project = GS_PROJECT_ID
         location = "us-central1"
@@ -369,7 +396,7 @@ class CloudTaskWrapper(object):
         # Use the client to build and send the task.
         task = client.create_task(request={"parent": parent, "task": task_base})
 
-        logging.info("Created task {}".format(task.name))
+        logging.info("Created task {}".format(response.name))
         return task
 
 

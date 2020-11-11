@@ -2,7 +2,7 @@ import hashlib
 import os.path
 import tempfile
 
-from google.cloud import tasks_v2
+import googleapiclient.discovery
 
 from .apps import DCTConfig
 
@@ -51,8 +51,11 @@ class cached_property(object):
 class GoogleCloudClient(object):
     @cached_property
     def client(self):
-        client = tasks_v2.CloudTasksClient(
-            credentials=DCTConfig.DJANGO_CLOUD_TASKS_CREDENTIALS
+        client = googleapiclient.discovery.build(
+            "cloudtasks",
+            "v2",
+            credentials=DCTConfig.DJANGO_CLOUD_TASKS_CREDENTIALS(),
+            cache=DiscoveryCache(),
         )
         return client
 
