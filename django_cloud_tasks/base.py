@@ -10,8 +10,7 @@ from django.test import RequestFactory
 
 from .apps import DCTConfig
 from .connection import connection
-from .constants import (DJANGO_HANDLER_SECRET_HEADER_NAME,
-                        HANDLER_SECRET_HEADER_NAME)
+from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME, HANDLER_SECRET_HEADER_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -170,12 +169,12 @@ class EmulatedTask(object):
         self.setup()
 
     def setup(self):
-        payload = self.body["task"]["appEngineHttpRequest"]["body"]
+        payload = self.body["http_request"]["body"]
         decoded = json.loads(base64.b64decode(payload))
-        self.body["task"]["appEngineHttpRequest"]["body"] = decoded
+        self.body["http_request"]["body"] = decoded
 
     def get_json_body(self):
-        body = self.body["task"]["appEngineHttpRequest"]["body"]
+        body = self.body["http_request"]["body"]
         return json.dumps(body)
 
     @property
@@ -304,32 +303,77 @@ class CloudTaskWrapper(object):
         formatted[HANDLER_SECRET_HEADER_NAME] = self._handler_secret
         return formatted
 
-    def get_body(self):
+    def get_body(self, payload=None, in_seconds=None, task_name=None):
+        """
+        Construct the request body
+        params: payload: Dict Payload
+        in_seconds: DateTime object used to schedule the task
+        task_name: string of task name
+        """
+
         body = {
             "task": {
-                "appEngineHttpRequest": {
-                    "httpMethod": "POST",
-                    "relativeUri": self._task_handler_url,
-                    "headers": self.formatted_headers,
+                "http_request": {  # Specify the type of request.
+                    "http_method": tasks_v2.HttpMethod.POST,
+                    "url": self._task_handler_url,  # The full url path that the task will be sent to.
+                    "oidc_token": {"service_account_email": service_account_email},
                 }
             }
         }
 
-        payload = {"internal_task_name": self._internal_task_name, "data": self._data}
-        payload = json.dumps(payload, cls=ComplexEncoder)
-        logger.debug(
-            "Creating task with body {0}".format(payload), extra={"taskBody": payload}
-        )
-        base64_encoded_payload = base64.b64encode(payload.encode())
-        converted_payload = base64_encoded_payload.decode()
+        if payload is not None:
+            if isinstance(payload, dict):
+                # Convert dict to JSON string
+                payload = json.dumps(payload)
+                # specify http content-type to application/json
+                body["task"]["http_request"]["headers"] = {
+                    "Content-type": "application/json"
+                }
 
-        body["task"]["appEngineHttpRequest"]["body"] = converted_payload
+            # The API expects a payload of type bytes.
+            task_payload = payload.encode()
+
+            # Add the payload to the request.
+            body["task"]["http_request"]["body"] = task_payload
+
+        if in_seconds is not None:
+            # Convert "seconds from now" into an rfc3339 datetime string.
+            d = datetime.datetime.utcnow() + datetime.timedelta(seconds=in_seconds)
+
+            # Create Timestamp protobuf.
+            timestamp = timestamp_pb2.Timestamp()
+            timestamp.FromDatetime(d)
+
+            # Add the timestamp to the tasks.
+            body["task"]["schedule_time"] = timestamp
+
+        if task_name is not None:
+            # Add the name to tasks.
+            body["task"]["name"] = task_name
+
         return body
 
-    def create_cloud_task(self):
-        task = self._connection.tasks_endpoint.create(
-            parent=self._cloud_task_queue_name, body=self.get_body()
-        )
+    def create_cloud_task(self, queue="default"):
+        """
+        get request payload and create the task using task_v2
+
+        workspace: workspace string
+        queue: name of the cloud tasks queue
+
+        returns `Task` object instance
+        """
+        project = DCTConfig.GS_PROJECT_ID
+        location = "us-central1"
+
+        # create the payload of the request
+        body = self.get_body()
+        # Construct the fully qualified queue name.
+        parent = client.queue_path(project, location, queue)
+
+        # Use the client to build and send the task.
+        task = client.create_task(request={"parent": parent, "task": body})
+
+        logging.info("Created task {}".format(response.name))
         return task
 
 
