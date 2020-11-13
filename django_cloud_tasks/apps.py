@@ -25,7 +25,7 @@ class DCTConfig(AppConfig):
     def task_handler_root_url(cls):
         return cls._settings().get("task_handler_root_url")
 
-    @glassmethod
+    @classmethod
     def google_project_id(cls):
         return cls._settings().get(settings, "DJANGO_CLOUD_TASKS_PROJECT_ID")
 
