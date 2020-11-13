@@ -6,11 +6,14 @@ import logging
 import time
 import uuid
 
+from google.cloud import tasks_v2
+
 from django.test import RequestFactory
 
 from .apps import DCTConfig
 from .connection import connection
-from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME, HANDLER_SECRET_HEADER_NAME
+from .constants import (DJANGO_HANDLER_SECRET_HEADER_NAME,
+                        HANDLER_SECRET_HEADER_NAME)
 
 logger = logging.getLogger(__name__)
 
@@ -314,7 +317,7 @@ class CloudTaskWrapper(object):
         body = {
             "task": {
                 "http_request": {  # Specify the type of request.
-                    "http_method": connection.HttpMethod.POST,
+                    "http_method": tasks_v2.HttpMethod.POST,
                     "url": self._task_handler_url,  # The full url path that the task will be sent to.
                     "oidc_token": {"service_account_email": service_account_email},
                 }
