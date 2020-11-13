@@ -314,7 +314,7 @@ class CloudTaskWrapper(object):
         body = {
             "task": {
                 "http_request": {  # Specify the type of request.
-                    "http_method": POST,
+                    "http_method": connection.HttpMethod.POST,
                     "url": self._task_handler_url,  # The full url path that the task will be sent to.
                     "oidc_token": {"service_account_email": service_account_email},
                 }
