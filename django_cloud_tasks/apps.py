@@ -30,6 +30,10 @@ class DCTConfig(AppConfig):
         return cls._settings().get(settings, "DJANGO_CLOUD_TASKS_PROJECT_ID")
 
     @classmethod
+    def service_account_email(cls):
+        return cls._settings().get(settings, "SERVICE_ACCOUNT_EMAIL")
+
+    @classmethod
     def execute_locally(cls):
         return getattr(settings, "DJANGO_CLOUD_TASKS_EXECUTE_LOCALLY", False)
 
