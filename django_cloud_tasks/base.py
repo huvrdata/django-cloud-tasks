@@ -322,6 +322,7 @@ class CloudTaskWrapper(object):
                     "oidc_token": {"service_account_email": DCTConfig.service_account_email()},
                 }
             }
+        }
 
         if payload is not None:
             if isinstance(payload, dict):
