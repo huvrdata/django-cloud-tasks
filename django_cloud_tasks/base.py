@@ -6,7 +6,7 @@ import logging
 import time
 import uuid
 
-from google.cloud import 
+from google.cloud import tasks_v2
 
 from django.test import RequestFactory
 
