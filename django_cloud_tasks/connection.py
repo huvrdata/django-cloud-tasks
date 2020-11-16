@@ -25,7 +25,7 @@ class GoogleCloudClient(object):
     @cached_property
     def client(self):
         client = tasks_v2.CloudTasksClient(
-            credentials=DCTConfig.DJANGO_CLOUD_TASKS_CREDENTIALS
+            credentials=DCTConfig.google_cloud_credentials()
         )
         return client
 
