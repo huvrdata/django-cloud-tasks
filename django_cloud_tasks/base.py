@@ -6,8 +6,6 @@ import logging
 import time
 import uuid
 
-from google.cloud import tasks_v2
-
 from django.test import RequestFactory
 
 from .apps import DCTConfig
@@ -317,7 +315,7 @@ class CloudTaskWrapper(object):
         body = {
             "task": {
                 "http_request": {  # Specify the type of request.
-                    "http_method": tasks_v2.HttpMethod.POST,
+                    "http_method": connection.client.HttpMethod.POST,
                     "url": self._task_handler_url,  # The full url path that the task will be sent to.
                     "oidc_token": {"service_account_email": DCTConfig.service_account_email()},
                 }
@@ -371,10 +369,10 @@ class CloudTaskWrapper(object):
         # create the payload of the request
         body = self.get_body()
         # Construct the fully qualified queue name.
-        parent = tasks_v2.queue_path(project, location, queue)
+        parent = connection.client.queue_path(project, location, queue)
 
         # Use the client to build and send the task.
-        task = tasks_v2.create_task(request={"parent": parent, "task": body})
+        task = connection.client.create_task(request={"parent": parent, "task": body})
 
         logging.info("Created task {}".format(response.name))
         return task
