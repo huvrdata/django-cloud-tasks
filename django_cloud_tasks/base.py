@@ -319,7 +319,7 @@ class CloudTaskWrapper(object):
                 "http_request": {  # Specify the type of request.
                     "http_method": tasks_v2.HttpMethod.POST,
                     "url": self._task_handler_url,  # The full url path that the task will be sent to.
-                    "oidc_token": {"service_account_email": service_account_email()},
+                    "oidc_token": {"service_account_email": DCTConfig.service_account_email()},
                 }
             }
         }
