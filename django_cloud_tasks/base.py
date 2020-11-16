@@ -314,13 +314,12 @@ class CloudTaskWrapper(object):
         task_name: string of task name
         """
 
-        body = {
-            "task": {
-                "http_request": {  # Specify the type of request.
-                    "http_method": tasks_v2.HttpMethod.POST,
-                    "url": self._task_handler_url,  # The full url path that the task will be sent to.
-                    "oidc_token": {"service_account_email": DCTConfig.service_account_email()},
-                }
+        
+        task_body = {
+            "http_request": {  # Specify the type of request.
+                "http_method": tasks_v2.HttpMethod.POST,
+                "url": self._task_handler_url,  # The full url path that the task will be sent to.
+                "oidc_token": {"service_account_email": DCTConfig.service_account_email()},
             }
         }
 
@@ -329,7 +328,7 @@ class CloudTaskWrapper(object):
                 # Convert dict to JSON string
                 payload = json.dumps(payload)
                 # specify http content-type to application/json
-                body["task"]["http_request"]["headers"] = {
+                task_body["http_request"]["headers"] = {
                     "Content-type": "application/json"
                 }
 
@@ -337,7 +336,7 @@ class CloudTaskWrapper(object):
             task_payload = payload.encode()
 
             # Add the payload to the request.
-            body["task"]["http_request"]["body"] = task_payload
+            task_body["http_request"]["body"] = task_payload
 
         if in_seconds is not None:
             # Convert "seconds from now" into an rfc3339 datetime string.
@@ -348,7 +347,7 @@ class CloudTaskWrapper(object):
             timestamp.FromDatetime(d)
 
             # Add the timestamp to the tasks.
-            body["task"]["schedule_time"] = timestamp
+            task_body["schedule_time"] = timestamp
 
         if task_name is not None:
             # Add the name to tasks.

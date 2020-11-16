@@ -1,2 +1,4 @@
 Django==2.0.1
 google-cloud-tasks==2.0.0
+six==1.14.0
+protobuf==3.12.0
