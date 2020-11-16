@@ -371,10 +371,10 @@ class CloudTaskWrapper(object):
         # create the payload of the request
         body = self.get_body()
         # Construct the fully qualified queue name.
-        parent = client.queue_path(project, location, queue)
+        parent = tasks_v2.queue_path(project, location, queue)
 
         # Use the client to build and send the task.
-        task = client.create_task(request={"parent": parent, "task": body})
+        task = tasks_v2.create_task(request={"parent": parent, "task": body})
 
         logging.info("Created task {}".format(response.name))
         return task
