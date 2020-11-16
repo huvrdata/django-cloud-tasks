@@ -31,7 +31,7 @@ class DCTConfig(AppConfig):
 
     @classmethod
     def service_account_email(cls):
-        return cls._settings().get(settings, "SERVICE_ACCOUNT_EMAIL")
+        return getattr(settings, "SERVICE_ACCOUNT_EMAIL")
 
     @classmethod
     def execute_locally(cls):
