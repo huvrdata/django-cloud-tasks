@@ -370,6 +370,7 @@ class CloudTaskWrapper(object):
         returns `Task` object instance
         """
         project = DCTConfig.google_project_id()
+        print(f"Google Project ID: {project}")
         location = "us-central1"
 
         # create the payload of the request
