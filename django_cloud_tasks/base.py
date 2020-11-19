@@ -381,7 +381,7 @@ class CloudTaskWrapper(object):
         # Use the client to build and send the task.
         task = connection.client.create_task(request={"parent": parent, "task": body})
 
-        logging.info("Created task {}".format(response.name))
+        logging.info("Created task {}".format(task.name))
         return task
 
 
