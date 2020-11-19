@@ -294,6 +294,7 @@ class CloudTaskWrapper(object):
 
     @property
     def _cloud_task_queue_name(self):
+        print("{}/queues/{}".format(DCTConfig.project_location_name(), self._queue))
         return "{}/queues/{}".format(DCTConfig.project_location_name(), self._queue)
 
     @property
