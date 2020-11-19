@@ -354,6 +354,9 @@ class CloudTaskWrapper(object):
             # Add the name to tasks.
             body["task"]["name"] = task_name
 
+        print("-"*50)
+        print(json.dumps(body, indent=4))
+        print("-"*50)
         return body
 
     def create_cloud_task(self, queue="default"):
