@@ -357,7 +357,7 @@ class CloudTaskWrapper(object):
         print("-"*50)
         print(json.dumps(body, indent=4))
         print("-"*50)
-        return body["tasks"]
+        return body["task"]
 
     def create_cloud_task(self, queue="default"):
         """
