@@ -192,7 +192,7 @@ class EmulatedTask(object):
         from .views import run_task
 
         request = RequestFactory().post(
-            "/_tasks/",
+            "/api/_tasks/",
             data=self.get_json_body(),
             content_type="application/json",
             **self.request_headers
@@ -294,7 +294,6 @@ class CloudTaskWrapper(object):
 
     @property
     def _cloud_task_queue_name(self):
-        print("{}/queues/{}".format(DCTConfig.project_location_name(), self._queue))
         return "{}/queues/{}".format(DCTConfig.project_location_name(), self._queue)
 
     @property
@@ -355,9 +354,6 @@ class CloudTaskWrapper(object):
             # Add the name to tasks.
             body["task"]["name"] = task_name
 
-        print("-"*50)
-        print(json.dumps(body, indent=4))
-        print("-"*50)
         return body["task"]
 
     def create_cloud_task(self, queue="default"):
@@ -370,7 +366,6 @@ class CloudTaskWrapper(object):
         returns `Task` object instance
         """
         project = DCTConfig.google_project_id()
-        print(f"Google Project ID: {project}")
         location = "us-central1"
 
         # create the payload of the request
