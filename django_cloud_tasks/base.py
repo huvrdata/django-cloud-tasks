@@ -172,12 +172,12 @@ class EmulatedTask(object):
         self.setup()
 
     def setup(self):
-        payload = self.body["http_request"]["body"]
+        payload = self.body["task"]["http_request"]["body"]
         decoded = json.loads(base64.b64decode(payload))
-        self.body["http_request"]["body"] = decoded
+        self.body["task"]["http_request"]["body"] = decoded
 
     def get_json_body(self):
-        body = self.body["http_request"]["body"]
+        body = self.body["task"]["http_request"]["body"]
         return json.dumps(body)
 
     @property
