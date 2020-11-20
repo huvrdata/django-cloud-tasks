@@ -271,7 +271,7 @@ class CloudTaskWrapper(object):
         if not retry_limit:
             return self.create_cloud_task().execute()
         else:
-            return retry(retry_limit=retry_limit, retry_interval=retry_interval)(self.create_cloud_task().execute)()
+            return retry(retry_limit=retry_limit, retry_interval=retry_interval)(self.create_cloud_task().execute())()
 
     def run(self, mock_request=None):
         """
