@@ -31,7 +31,7 @@ class DCTConfig(AppConfig):
 
     @classmethod
     def google_project_id(cls):
-        return getattr("DJANGO_CLOUD_TASKS_PROJECT_ID")
+        return getattr(settings, "DJANGO_CLOUD_TASKS_PROJECT_ID")
 
     @classmethod
     def service_account_email(cls):
