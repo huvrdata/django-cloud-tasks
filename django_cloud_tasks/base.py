@@ -267,7 +267,10 @@ class CloudTaskWrapper(object):
             return None
 
         # if not retry_limit:
-        return self.create_cloud_task().execute()
+        try:
+            return self.create_cloud_task().execute()
+        except AttributeError as e:
+            logging.info('we got to the end of create_cloud_tasks, but failed to create the task')
         # else:
         #     return retry(retry_limit=retry_limit, retry_interval=retry_interval)(self.create_cloud_task().execute)()
 
