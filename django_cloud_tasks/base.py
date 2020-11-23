@@ -192,7 +192,7 @@ class EmulatedTask(object):
         from .views import run_task
 
         request = RequestFactory().post(
-            "/api/_tasks/",
+            DCTConfig.task_handler_uri(),
             data=self.get_json_body(),
             content_type="application/json",
             **self.request_headers
@@ -220,7 +220,7 @@ class CloudTaskWrapper(object):
         queue,
         data,
         internal_task_name=None,
-        task_handler_url=None,
+        task_handler_url=DCTConfig.task_handler_root_url(),
         is_remote=False,
         headers=None,
     ):
@@ -231,7 +231,7 @@ class CloudTaskWrapper(object):
         self._internal_task_name = (
             internal_task_name or self._base_task.internal_task_name
         )
-        self._task_handler_url = task_handler_url or DCTConfig.task_handler_root_url()
+        self._task_handler_url = task_handler_url
         self._handler_secret = DCTConfig.handler_secret()
         self._is_remote = is_remote
         self._headers = headers or {}

@@ -26,8 +26,12 @@ class DCTConfig(AppConfig):
         return cls._settings().get("task_handler_root_url")
 
     @classmethod
+    def task_handler_uri(cls):
+        return cls._settings().get("task_handler_uri")
+
+    @classmethod
     def google_project_id(cls):
-        return getattr(settings, "DJANGO_CLOUD_TASKS_PROJECT_ID")
+        return getattr("DJANGO_CLOUD_TASKS_PROJECT_ID")
 
     @classmethod
     def service_account_email(cls):
