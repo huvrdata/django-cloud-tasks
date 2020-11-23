@@ -262,16 +262,14 @@ class CloudTaskWrapper(object):
 
         if self._is_remote and DCTConfig.block_remote_tasks():
             logger.debug(
-                "Remote task {0} was ignored. Task data:\n {1}".format(
-                    self._internal_task_name, self._data
-                )
+                f"Remote task {self._internal_task_name} was ignored. Task data:\n {self._data}"
             )
             return None
 
-        if not retry_limit:
-            return self.create_cloud_task().execute()
-        else:
-            return retry(retry_limit=retry_limit, retry_interval=retry_interval)(self.create_cloud_task().execute)()
+        # if not retry_limit:
+        return self.create_cloud_task().execute()
+        # else:
+        #     return retry(retry_limit=retry_limit, retry_interval=retry_interval)(self.create_cloud_task().execute)()
 
     def run(self, mock_request=None):
         """
