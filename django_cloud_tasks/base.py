@@ -144,8 +144,8 @@ def batch_execute(tasks, retry_limit=10, retry_interval=3):
         return batch.execute()
     else:
         return retry(retry_limit=retry_limit, retry_interval=retry_interval)(
-            batch.execute
-        )()
+            batch.execute()
+        )
 
 
 class BaseTask(object):
@@ -195,7 +195,7 @@ class EmulatedTask(object):
             DCTConfig.task_handler_uri(),
             data=self.get_json_body(),
             content_type="application/json",
-            **self.request_headers
+            **self.request_headers,
         )
         return run_task(request=request)
 
@@ -266,13 +266,18 @@ class CloudTaskWrapper(object):
             )
             return None
 
-        # if not retry_limit:
-        try:
-            return self.create_cloud_task().execute
-        except AttributeError as e:
-            logging.info('we got to the end of create_cloud_tasks, but failed to create the task')
-        # else:
-        #     return retry(retry_limit=retry_limit, retry_interval=retry_interval)(self.create_cloud_task().execute)()
+        if not retry_limit:
+            # try:
+            return self.create_cloud_task().execute()
+        # except AttributeError as e:
+        #     logging.info('we got to the end of create_cloud_tasks, but failed to create the task')
+        else:
+            logging.info(
+                f"creating a cloud task with {retry_limit} retries in {retry_interval}"
+            )
+            return retry(retry_limit=retry_limit, retry_interval=retry_interval)(
+                self.create_cloud_task().execute()
+            )
 
     def run(self, mock_request=None):
         """
@@ -318,7 +323,9 @@ class CloudTaskWrapper(object):
                 "http_request": {  # Specify the type of request.
                     "http_method": tasks_v2.HttpMethod.POST,
                     "url": self._task_handler_url,  # The full url path that the task will be sent to.
-                    "oidc_token": {"service_account_email": DCTConfig.service_account_email()},
+                    "oidc_token": {
+                        "service_account_email": DCTConfig.service_account_email()
+                    },
                 }
             }
         }
