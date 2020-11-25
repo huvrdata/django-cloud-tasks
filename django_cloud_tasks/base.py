@@ -12,8 +12,7 @@ from django.test import RequestFactory
 
 from .apps import DCTConfig
 from .connection import connection
-from .constants import (DJANGO_HANDLER_SECRET_HEADER_NAME,
-                        HANDLER_SECRET_HEADER_NAME)
+from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME, HANDLER_SECRET_HEADER_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -268,7 +267,7 @@ class CloudTaskWrapper(object):
 
         if not retry_limit:
             # try:
-            return self.create_cloud_task().execute()
+            return self.create_cloud_task()
         # except AttributeError as e:
         #     logging.info('we got to the end of create_cloud_tasks, but failed to create the task')
         else:
@@ -276,7 +275,7 @@ class CloudTaskWrapper(object):
                 f"creating a cloud task with {retry_limit} retries in {retry_interval}"
             )
             return retry(retry_limit=retry_limit, retry_interval=retry_interval)(
-                self.create_cloud_task().execute()
+                self.create_cloud_task()
             )
 
     def run(self, mock_request=None):
@@ -383,6 +382,7 @@ class CloudTaskWrapper(object):
         task = connection.client.create_task(request={"parent": parent, "task": body})
 
         logging.info(f"Created task {task.name}")
+        breakpoint()
         return task
 
 
