@@ -13,6 +13,8 @@ from django.test import RequestFactory
 from .apps import DCTConfig
 from .connection import connection
 from .constants import DJANGO_HANDLER_SECRET_HEADER_NAME, HANDLER_SECRET_HEADER_NAME
+from .decorators import retry
+
 
 logger = logging.getLogger(__name__)
 
@@ -73,33 +75,6 @@ class ComplexEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def retry(retry_limit, retry_interval):
-    """
-    Decorator for retrying task scheduling
-    """
-
-    def decorator(f):
-        def wrapper():
-            attempts_left = retry_limit
-            error = None
-            while attempts_left > 1:
-                try:
-                    return f()
-                except Exception as e:
-                    error = e
-                    logger.exception("Task scheduling failed. Retrying...")
-                    time.sleep(retry_interval)
-                    attempts_left -= 1
-
-            # Limit exhausted
-            error.args = ("Task scheduling limit exhausted",) + error.args
-            raise error
-
-        return wrapper
-
-    return decorator
-
-
 def batch_callback_logger(id, message, exception):
     if exception:
         resp, _bytes = exception.args
@@ -140,10 +115,10 @@ def batch_execute(tasks, retry_limit=10, retry_interval=3):
         batch.add(t.create_cloud_task(), callback=batch_callback_logger)
 
     if not retry_limit:
-        return batch.execute()
+        return batch.enqueue()
     else:
         return retry(retry_limit=retry_limit, retry_interval=retry_interval)(
-            batch.execute()
+            batch.enqueue()
         )
 
 
@@ -250,7 +225,7 @@ class CloudTaskWrapper(object):
     def execute_local(self):
         return EmulatedTask(body=self.get_body()).execute()
 
-    def execute(self, retry_limit=10, retry_interval=5):
+    def enqueue(self, retry_limit=10, retry_interval=5):
         """
         Enqueue cloud task and send for execution
         :param retry_limit: How many times task scheduling will be attempted
@@ -267,7 +242,7 @@ class CloudTaskWrapper(object):
 
         if not retry_limit:
             # try:
-            return self.create_cloud_task()
+            return self.create_cloud_task().enqueue()
         # except AttributeError as e:
         #     logging.info('we got to the end of create_cloud_tasks, but failed to create the task')
         else:
@@ -275,8 +250,8 @@ class CloudTaskWrapper(object):
                 f"creating a cloud task with {retry_limit} retries in {retry_interval}"
             )
             return retry(retry_limit=retry_limit, retry_interval=retry_interval)(
-                self.create_cloud_task()
-            )
+                self.create_cloud_task().enqueue()
+            ), self.create_cloud_task()
 
     def run(self, mock_request=None):
         """
@@ -309,7 +284,7 @@ class CloudTaskWrapper(object):
         formatted[HANDLER_SECRET_HEADER_NAME] = self._handler_secret
         return formatted
 
-    def get_body(self, payload=None, in_seconds=None, task_name=None):
+    def get_body(self, payload, in_seconds, task_name):
         """
         Construct the request body
         params: payload: Dict Payload
@@ -361,7 +336,7 @@ class CloudTaskWrapper(object):
 
         return body["task"]
 
-    def create_cloud_task(self, queue="default"):
+    def create_cloud_task(self, queue="default", payload=None, in_seconds=None, task_name=None):
         """
         get request payload and create the task using task_v2
 
@@ -371,10 +346,10 @@ class CloudTaskWrapper(object):
         returns `Task` object instance
         """
         project = DCTConfig.google_project_id()
-        location = "us-central1"
+        location = DCTConfig.google_project_location()
 
         # create the payload of the request
-        body = self.get_body()
+        body = self.get_body(payload=payload, in_seconds=in_seconds, task_name=task_name)
         # Construct the fully qualified queue name.
         parent = connection.client.queue_path(project, location, queue)
 
@@ -382,8 +357,20 @@ class CloudTaskWrapper(object):
         task = connection.client.create_task(request={"parent": parent, "task": body})
 
         logging.info(f"Created task {task.name}")
-        breakpoint()
+        # breakpoint()
         return task
+
+
+    def execute(self):
+        """ execute a created task """
+        from .views import run_task
+
+        request = RequestFactory().post(
+            DCTConfig.task_handler_uri(),
+            data=self.create_cloud_task(),
+            content_type="application/json",
+        )
+        return run_task(request=request)
 
 
 class RemoteCloudTask(object):

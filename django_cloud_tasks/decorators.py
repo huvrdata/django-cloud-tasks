@@ -1,6 +1,6 @@
 from functools import partial, wraps
 
-from .base import BaseTask, CloudTaskWrapper
+# from .base import BaseTask, CloudTaskWrapper
 from .registries import registry
 
 
@@ -25,6 +25,8 @@ def create_task(task_class, func, **kwargs):
 
 
 def task(queue, **headers):
+    """decorator to add task to task registry"""
+    from .base import BaseTask, CloudTaskWrapper
     def decorator(func):
         task_cls = create_task(BaseTask, func)
         registry.register(task_cls)
@@ -34,5 +36,29 @@ def task(queue, **headers):
             return CloudTaskWrapper(task_cls, queue, kwargs, headers=headers)
 
         return inner_run
+
+    return decorator
+
+def retry(retry_limit, retry_interval):
+    """
+    Decorator for retrying task scheduling
+    """
+    def decorator(f):
+        def wrapper():
+            attempts_left = retry_limit
+            error = None
+            while attempts_left > 1:
+                try:
+                    return f()
+                except Exception as e:
+                    error = e
+                    logger.exception("Task scheduling failed. Retrying...")
+                    time.sleep(retry_interval)
+                    attempts_left -= 1
+
+            # Limit exhausted
+            error.args = ("Task scheduling limit exhausted",) + error.args
+            raise error
+        return wrapper
 
     return decorator

@@ -69,6 +69,7 @@ def pytest_configure(config):
         },
         DJANGO_CLOUD_TASKS_PROJECT_ID=PROJECT_ID,
         SERVICE_ACCOUNT_EMAIL=f"{PROJECT_ID}@appspot.gserviceaccount.com",
+        GOOGLE_PROJECT_LOCATION = "us-central1",
         DJANGO_CLOUD_TASKS_EXECUTE_LOCALLY=False,
         DJANGO_CLOUD_TASKS_BLOCK_REMOTE_TASKS=True,
         DJANGO_CLOUD_TASKS_CREDENTIALS=None,

@@ -7,3 +7,6 @@ db.sqlite3
 media
 .idea/
 .creds/
+env/
+.pytest_cache/
+.vscode/
